@@ -1,4 +1,7 @@
-from flask import Flask, render_template
+import sqlite3
+
+from flask import Flask, redirect, render_template, request, url_for
+from werkzeug.security import generate_password_hash
 
 from database.db import get_db, init_db, seed_db
 
@@ -18,9 +21,39 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    return render_template("register.html")
+    if request.method == "GET":
+        return render_template("register.html")
+
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+
+    local, _, domain = email.partition("@")
+    error = None
+    if not name or len(name) > 100:
+        error = "Please enter your name (up to 100 characters)."
+    elif not local or not domain or "@" in domain or len(email) > 254:
+        error = "Please enter a valid email address."
+    elif len(password) < 8:
+        error = "Password must be at least 8 characters."
+
+    if error is None:
+        conn = get_db()
+        try:
+            conn.execute(
+                "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+                (name, email, generate_password_hash(password)),
+            )
+            conn.commit()
+            return redirect(url_for("login"))
+        except sqlite3.IntegrityError:
+            error = "An account with that email already exists."
+        finally:
+            conn.close()
+
+    return render_template("register.html", error=error, name=name, email=email)
 
 
 @app.route("/login")
