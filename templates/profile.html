@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+    <div class="profile-container">
+
+        <div class="profile-card">
+            <div class="profile-avatar">{{ user.initials }}</div>
+            <div class="profile-info">
+                <h1 class="profile-name">{{ user.name }}</h1>
+                <p class="profile-email">{{ user.email }}</p>
+                <p class="profile-since">Member since {{ user.member_since }}</p>
+            </div>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-tile">
+                <span class="stat-label">Total spent</span>
+                <span class="stat-value">₹{{ "{:,.0f}".format(stats.total_spent) }}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-label">Transactions</span>
+                <span class="stat-value">{{ stats.transaction_count }}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-label">Top category</span>
+                <span class="stat-value">{{ stats.top_category }}</span>
+            </div>
+        </div>
+
+        <div class="profile-panel">
+            <h2 class="panel-title">Recent transactions</h2>
+            <div class="txn-wrap">
+                <table class="txn-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Category</th>
+                            <th scope="col" class="txn-amount">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in transactions %}
+                        <tr>
+                            <td>{{ t.date }}</td>
+                            <td>{{ t.description }}</td>
+                            <td><span class="badge badge-{{ t.category|lower }}">{{ t.category }}</span></td>
+                            <td class="txn-amount">₹{{ "{:,.0f}".format(t.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="profile-panel">
+            <h2 class="panel-title">Spending by category</h2>
+            <ul class="cat-list">
+                {% for c in categories %}
+                <li class="cat-row">
+                    <div class="cat-head">
+                        <span class="cat-name">{{ c.name }}</span>
+                        <span class="cat-total">₹{{ "{:,.0f}".format(c.total) }} · {{ c.percent }}%</span>
+                    </div>
+                    <progress class="cat-bar" max="100" value="{{ c.percent }}" aria-label="{{ c.name }} share of spending">{{ c.percent }}%</progress>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
